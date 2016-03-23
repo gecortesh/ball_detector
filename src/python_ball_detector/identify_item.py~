@@ -1,0 +1,45 @@
+#!/usr/bin/env python
+
+import numpy as np
+import cv2
+#from sensor_msgs import Image
+
+def identify():
+    
+    camera = cv2.VideoCapture(0)
+    firstFrame = None
+
+    while(1):
+	# Take each frame
+	grabbed, frame = camera.read()
+	# Convert BGR to HSV
+	hsvframe = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+	# define range of red color in HSV
+	lower_red = np.array([110,100,100], dtype=np.uint8)
+	upper_red = np.array([130,255,255], dtype=np.uint8)
+
+	# Filter only the red colr of the HSV image
+	mask = cv2.inRange(hsvframe, lower_red, upper_red)
+
+	kernel = np.ones((5,5),np.uint8)
+	opening = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
+	closing = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+
+	# Bitwise-and mask and original image
+	red = cv2.bitwise_and(frame,frame, mask= mask)
+	if np.any(mask,None,None,False):
+            
+	    cv2.putText(red, "Object color red detected", (10, 20),
+  	    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 2)
+	cv2.imshow('Video',frame)
+	cv2.imshow('Mask',mask)
+	cv2.imshow('Red',red)
+
+	k = cv2.waitKey(5) & 0xFF
+	if k == ord("q"):
+	    break
+    if np.any(mask,None,None,False):
+            print "Object Found"
+    cv2.destroyAllWindows()
+
